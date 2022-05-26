@@ -7,13 +7,13 @@ namespace Discord_Bot;
 public class Program
 {
     private const string Url = "https://habr.com/ru/rss/all/all/?fl=ru";
-    private const long PollingPeriod = TimeSpan.TicksPerMinute * 1;
+    private const long PollingPeriod = TimeSpan.TicksPerSecond * 10;//TimeSpan.TicksPerMinute * 2;
 
     private DiscordSocketClient _client;
     private CommandHandler _commandHandler;
 
     private RssReader _rssReader;
-    private RssDelegator _rssDelegator;
+    private ArticleSender _articleSender;
 
     public static Task Main(string[] args) => new Program().MainAsync();
 
@@ -23,10 +23,10 @@ public class Program
         _client = new DiscordSocketClient();
 
         //Register RSS
-        _rssReader = new(Url);
-        _rssDelegator = new(_client);
+        _rssReader = new RssReader(Url);
+        _articleSender = new ArticleSender(_client);
 
-        _rssDelegator.Log += Log;
+        _articleSender.Log += Log;
 
         _client.Log += Log;
         _client.Ready += WaitForNewPosts;
@@ -65,6 +65,6 @@ public class Program
     private void CheckFeedAndNotify()
     {
         var feed = _rssReader.ReadRssFeed();
-        _rssDelegator.DelegateRss(feed);
+        _articleSender.SendArticles(feed);
     }
 }
